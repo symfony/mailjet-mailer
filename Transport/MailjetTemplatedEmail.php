@@ -7,7 +7,7 @@ use Symfony\Component\Mime\Exception\LogicException;
 use Symfony\Component\Mime\Header\Headers;
 use Symfony\Component\Mime\Part\AbstractPart;
 
-class MailjetTemplateEmail extends Email
+class MailjetTemplatedEmail extends Email
 {
     protected $templateId = null;
     protected $variables = array();
