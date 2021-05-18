@@ -128,6 +128,31 @@ class MailjetApiTransport extends AbstractApiTransport
             $message['Headers'][$header->getName()] = $header->getBodyAsString();
         }
 
+        if ($email instanceof MailjetTemplateEmail) {
+            if ($email->getTemplateId()) {
+                $payload['TemplateLanguage'] = true;
+                $payload['TemplateID'] = $email->getTemplateId();
+            }
+
+            if (count($email->getVariables())) {
+                $payload['Variables'] = $email->getVariables();
+            }
+
+            if ($email->getErrorReportingEmail()) {
+                $payload['TemplateErrorReporting'] = array(
+                    'Email' => $email->getErrorReportingEmail(),
+                );
+            }
+
+            if ($email->isTemplateErrorDeliver()) {
+                $payload['TemplateErrorDeliver'] = true;
+            }
+
+            if (count($email->getAdditionalProperties())) {
+                $payload = array_merge($payload, $email->getAdditionalProperties());
+            }
+        }
+
         return [
             'Messages' => [$message],
         ];
