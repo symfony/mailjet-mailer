@@ -11,6 +11,7 @@
 
 namespace Symfony\Component\Mailer\Bridge\Mailjet\Transport;
 
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Envelope;
 use Symfony\Component\Mailer\Exception\HttpTransportException;
@@ -19,7 +20,8 @@ use Symfony\Component\Mailer\SentMessage;
 use Symfony\Component\Mailer\Transport\AbstractApiTransport;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -63,14 +65,19 @@ class MailjetApiTransport extends AbstractApiTransport
             'json' => $this->getPayload($email, $envelope),
         ]);
 
-        $result = $response->toArray(false);
+        try {
+            $statusCode = $response->getStatusCode();
+            $result = $response->toArray(false);
+        } catch (DecodingExceptionInterface $e) {
+            throw new HttpTransportException(sprintf('Unable to send an email: "%s" (code %d).', $response->getContent(false), $statusCode), $response);
+        } catch (TransportExceptionInterface $e) {
+            throw new HttpTransportException('Could not reach the remote Mailjet server.', $response, 0, $e);
+        }
 
-        if (200 !== $response->getStatusCode()) {
-            if ('application/json' === $response->getHeaders(false)['content-type'][0]) {
-                throw new HttpTransportException(sprintf('Unable to send an email: "%s" (code %d).', $result['Message'], $response->getStatusCode()), $response);
-            }
+        if (200 !== $statusCode) {
+            $errorDetails = $result['Messages'][0]['Errors'][0]['ErrorMessage'] ?? $response->getContent(false);
 
-            throw new HttpTransportException(sprintf('Unable to send an email: "%s" (code %d).', $response->getContent(false), $response->getStatusCode()), $response);
+            throw new HttpTransportException(sprintf('Unable to send an email: "%s" (code %d).', $errorDetails, $statusCode), $response);
         }
 
         // The response needs to contains a 'Messages' key that is an array
