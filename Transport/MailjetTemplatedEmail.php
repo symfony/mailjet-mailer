@@ -9,6 +9,7 @@ use Symfony\Component\Mime\Part\AbstractPart;
 
 class MailjetTemplatedEmail extends Email
 {
+    protected $campaignName = null;
     protected $templateId = null;
     protected $variables = array();
     protected $errorReportingEmail = null;
@@ -21,6 +22,18 @@ class MailjetTemplatedEmail extends Email
 
         $this->html('');
         $this->text('');
+    }
+
+    public function getCampaignName()
+    {
+        return $this->campaignName;
+    }
+
+    public function setCampaignName(string $campaignName): self
+    {
+        $this->campaignName = $campaignName;
+
+        return $this;
     }
 
     public function getTemplateId()
@@ -113,7 +126,7 @@ class MailjetTemplatedEmail extends Email
      */
     public function __serialize(): array
     {
-        return [$this->templateId, $this->variables, $this->errorReportingEmail, $this->templateErrorDeliver, $this->additionalProperties, parent::__serialize()];
+        return [$this->campaignName, $this->templateId, $this->variables, $this->errorReportingEmail, $this->templateErrorDeliver, $this->additionalProperties, parent::__serialize()];
     }
 
     /**
@@ -121,7 +134,7 @@ class MailjetTemplatedEmail extends Email
      */
     public function __unserialize(array $data): void
     {
-        [$this->templateId, $this->variables, $this->errorReportingEmail, $this->templateErrorDeliver, $this->additionalProperties, $parentData] = $data;
+        [$this->campaignName, $this->templateId, $this->variables, $this->errorReportingEmail, $this->templateErrorDeliver, $this->additionalProperties, $parentData] = $data;
 
         parent::__unserialize($parentData);
     }
