@@ -61,7 +61,7 @@ class MailjetApiTransport extends AbstractApiTransport
             'headers' => [
                 'Accept' => 'application/json',
             ],
-            'auth_basic' => $this->publicKey.':'.$this->privateKey,
+            'auth_basic' => [$this->publicKey, $this->privateKey],
             'json' => $this->getPayload($email, $envelope),
         ]);
 
@@ -135,28 +135,32 @@ class MailjetApiTransport extends AbstractApiTransport
             $message['Headers'][$header->getName()] = $header->getBodyAsString();
         }
 
-        if ($email instanceof MailjetTemplateEmail) {
+        if ($email instanceof MailjetTemplatedEmail) {
+            if ($email->getCampaignName()) {
+                $message['CustomCampaign'] = $email->getCampaignName();
+            }
+
             if ($email->getTemplateId()) {
-                $payload['TemplateLanguage'] = true;
-                $payload['TemplateID'] = $email->getTemplateId();
+                $message['TemplateLanguage'] = true;
+                $message['TemplateID'] = $email->getTemplateId();
             }
 
             if (count($email->getVariables())) {
-                $payload['Variables'] = $email->getVariables();
+                $message['Variables'] = $email->getVariables();
             }
 
             if ($email->getErrorReportingEmail()) {
-                $payload['TemplateErrorReporting'] = array(
+                $message['TemplateErrorReporting'] = array(
                     'Email' => $email->getErrorReportingEmail(),
                 );
             }
 
             if ($email->isTemplateErrorDeliver()) {
-                $payload['TemplateErrorDeliver'] = true;
+                $message['TemplateErrorDeliver'] = true;
             }
 
             if (count($email->getAdditionalProperties())) {
-                $payload = array_merge($payload, $email->getAdditionalProperties());
+                $message = array_merge($message, $email->getAdditionalProperties());
             }
         }
 
