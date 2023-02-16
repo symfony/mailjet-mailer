@@ -41,6 +41,7 @@ class MailjetApiTransport extends AbstractApiTransport
 
     private $privateKey;
     private $publicKey;
+    private $sandbox;
 
     public function __construct(string $publicKey, string $privateKey, HttpClientInterface $client = null, EventDispatcherInterface $dispatcher = null, LoggerInterface $logger = null)
     {
