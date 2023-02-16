@@ -133,9 +133,15 @@ class MailjetApiTransport extends AbstractApiTransport
             $message['Headers'][$header->getName()] = $header->getBodyAsString();
         }
 
-        return [
+        $returnArray = [
             'Messages' => [$message],
         ];
+
+        if ($this->sandbox) {
+            $returnArray['SandboxMode']=true;
+        }
+
+        return $returnArray;
     }
 
     private function formatAddresses(array $addresses): array
